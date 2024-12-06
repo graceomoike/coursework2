@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-	DOCKERHUB_CREDS = credentials('docker')
+        DOCKERHUB_CREDS = credentials('docker')
     }
     stages {
         stage('Docker Image Build') {
@@ -35,14 +35,13 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-//                sshagent(['my-ssh-key']) {
+                // sshagent(['my-ssh-key']) {
                 kubernetesDeploy(
                     configs: 'kubernetes/deployment.yaml', // Path to your deployment YAML file in the Jenkins workspace
-                    kubeconfigId: 'my-kubeconfig' // ID of the Kubernetes credential in Jenkins	)
-		}
-	}
-                
-            
-}
+                    kubeconfigId: 'my-kubeconfig' // ID of the Kubernetes credential in Jenkins
+                )
+                // }
+            }
+        }
     }
 }
