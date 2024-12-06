@@ -35,10 +35,14 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sshagent(['my-ssh-key']) {
-                    sh 'scp /home/ubuntu/deployment-playbook.yml ubuntu@54.205.122.218:/home/ubuntu/'
-                }
-            }
-        }
+//                sshagent(['my-ssh-key']) {
+                kubernetesDeploy(
+                    configs: 'kubernetes/deployment.yaml', // Path to your deployment YAML file in the Jenkins workspace
+                    kubeconfigId: 'my-kubeconfig' // ID of the Kubernetes credential in Jenkins	)
+		}
+	}
+                
+            
+}
     }
 }
