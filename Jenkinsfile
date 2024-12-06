@@ -40,7 +40,7 @@ pipeline {
 
 		stage('Deploy') {
 			steps {
-				sshagent(['my-ssh-key'])
+				sshagent(['my-ssh-key']) {
 				sh 'scp /home/ubuntu/deployment-playbook.yml ubuntu@54.205.122.218:/home/ubuntu/'
 				
 				}
