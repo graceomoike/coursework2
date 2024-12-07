@@ -35,12 +35,13 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                // sshagent(['my-ssh-key']) {
-                kubernetesDeploy(
-                    configs: 'kubernetes/deployment.yaml', // Path to your deployment YAML file in the Jenkins workspace
-                    kubeconfigId: 'my-kubeconfig' // ID of the Kubernetes credential in Jenkins
-                )
-                // }
+                sshagent(['my-ssh-key']) {
+                    sh '''
+                        ssh ubuntu@ec2-3-86-177-54.compute-1.amazonaws.com "
+                            ansible-playbook /home/ubuntu/deployment-playbook.yml --extra-vars \\"dockerhub_image=graceomoike/cw2-server:1.0\\"
+                        "
+                    '''
+                }
             }
         }
     }
