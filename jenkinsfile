@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+    environment {
+        DOCKERHUB_CREDS = credentials('docker')
+    }
+    stages {
+        stage('Check Changes in server.js') {
+            steps {
+                script {
+                    def changes = sh(script: "git diff --name-only HEAD~1 | grep 'server.js'", returnStatus: true)
+                    if (changes != 0) {
+                        echo 'No changes in server.js. Skipping build.'
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    }
+                }
+            }
+        }
+        stage('Docker Image Build') {
+            steps {
+                echo 'Building Docker Image...'
+                sh 'docker build --tag graceomoike/cw2-server:1.0 .'
+                echo 'Docker Image Built Successfully!'
+            }
+        }
+        stage('Test Docker Image') {
+            steps {
+                echo 'Testing Docker Image...'
+                sh '''
+                    docker image inspect graceomoike/cw2-server:1.0
+                    docker run --name test-container -p 8081:8080 -d graceomoike/cw2-server:1.0
+                    docker ps
+                    docker stop test-container
+                    docker rm test-container
+                '''
+            }
+        }
+        stage('Dockerhub Login') {
+            steps {
+                echo 'Logging in to DockerHub...'
+                sh 'echo $DOCKERHUB_CREDS_PSW | docker login -u $DOCKERHUB_CREDS_USR --password-stdin'
+                echo 'Logged in to DockerHub successfully.'
+            }
+        }
+        stage('Dockerhub Image Push') {
+            steps {
+                echo 'Pushing Docker Image to DockerHub...'
+                sh 'docker push graceomoike/cw2-server:1.0'
+                echo 'Docker Image pushed successfully!'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying to Kubernetes using Ansible...'
+                sshagent(['my-ssh-key']) {
+                    sh '''
+                        ssh ubuntu@ec2-3-86-177-54.compute-1.amazonaws.com "
+                            ansible-playbook /home/ubuntu/deployment-playbook.yml --extra-vars \\">
+                        "
+                    '''
+                }
+                echo 'Deployment to Kubernetes completed!'
+            }
+        }
+    }
+}
