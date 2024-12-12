@@ -5,6 +5,20 @@ pipeline {
         DOCKERHUB_CREDS = credentials('docker')
     }
     stages {
+
+	stage('Check Changes in server.js') {
+    	    steps {
+        	script {
+            	    def changes = sh(script: "git diff --name-only HEAD~1 | grep 'server.js'", returnStatus: true)
+            	    if (changes != 0) {
+                	echo 'No changes in server.js. Skipping build.'
+                	currentBuild.result = 'SUCCESS'
+               		return
+                    }
+        	}
+    	    }
+	}
+
         stage('Docker Image Build') {
             steps {
                 echo 'Building Docker Image...'
