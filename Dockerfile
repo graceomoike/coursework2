@@ -5,6 +5,6 @@ WORKDIR /usr/src/app
 COPY server.js ./
 
 
-EXPOSE 8080
+EXPOSE 8081
 
 CMD ["node", "server.js"]
